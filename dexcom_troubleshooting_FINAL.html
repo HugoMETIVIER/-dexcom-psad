@@ -1,0 +1,2400 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guide Troubleshooting Dexcom G7 — PSAD</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --green: #00a04a;
+    --green-dark: #007a36;
+    --green-light: #e6f7ee;
+    --green-mid: #b3e6cc;
+    --orange: #f59e0b;
+    --orange-light: #fef3c7;
+    --red: #ef4444;
+    --red-light: #fee2e2;
+    --text: #1a1a2e;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --bg: #f8faf9;
+    --white: #ffffff;
+    --shadow: 0 4px 24px rgba(0,160,74,0.10);
+    --shadow-lg: 0 8px 40px rgba(0,160,74,0.15);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    width: 100%;
+    background: var(--white);
+    border-bottom: 2px solid var(--green-light);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,160,74,0.08);
+  }
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header-logo .dot {
+    width: 32px; height: 32px;
+    background: var(--green);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 14px;
+  }
+  .header-logo span {
+    font-weight: 700; font-size: 15px; color: var(--green-dark);
+    letter-spacing: -0.3px;
+  }
+  .header-logo small {
+    display: block; font-size: 11px; color: var(--text-muted);
+    font-weight: 400; margin-top: 1px;
+  }
+  .header-badge {
+    background: var(--green-light);
+    color: var(--green-dark);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--green-mid);
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    width: 100%;
+    max-width: 600px;
+    padding: 16px 24px 0;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .progress-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .progress-step {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--green);
+    font-weight: 500;
+  }
+  .progress-bar {
+    height: 6px;
+    background: var(--green-light);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--green-dark));
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── CARD ── */
+  .card-wrap {
+    width: 100%;
+    max-width: 600px;
+    padding: 20px 24px 32px;
+    flex: 1;
+  }
+
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 28px 28px 24px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+    animation: fadeUp 0.3s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-icon {
+    font-size: 40px;
+    text-align: center;
+    margin-bottom: 16px;
+    line-height: 1;
+  }
+
+  .card-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .card-question {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.3;
+    margin-bottom: 8px;
+  }
+
+  .card-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn-group.row {
+    flex-direction: row;
+  }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px 20px;
+    border-radius: var(--radius-sm);
+    border: 2px solid transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-align: left;
+  }
+  .btn-yes {
+    background: var(--green-light);
+    color: var(--green-dark);
+    border-color: var(--green-mid);
+    flex: 1;
+  }
+  .btn-yes:hover {
+    background: var(--green);
+    color: white;
+    border-color: var(--green);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,160,74,0.25);
+  }
+  .btn-no {
+    background: #f3f4f6;
+    color: var(--text);
+    border-color: var(--border);
+    flex: 1;
+  }
+  .btn-no:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+  }
+  .btn-primary {
+    background: var(--green);
+    color: white;
+    border-color: var(--green);
+    width: 100%;
+    font-size: 16px;
+    padding: 18px;
+  }
+  .btn-primary:hover {
+    background: var(--green-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+  }
+  .btn-duration {
+    background: var(--white);
+    color: var(--text);
+    border-color: var(--border);
+    justify-content: flex-start;
+    padding: 14px 18px;
+  }
+  .btn-duration:hover {
+    border-color: var(--green);
+    background: var(--green-light);
+    color: var(--green-dark);
+    transform: translateY(-1px);
+  }
+  .btn-duration .d-icon { font-size: 18px; }
+  .btn-duration .d-text { flex: 1; }
+  .btn-duration .d-label { font-size: 14px; font-weight: 600; }
+  .btn-duration .d-sub { font-size: 11px; font-weight: 400; color: var(--text-muted); }
+
+  /* ── CHECKLIST ── */
+  .checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    user-select: none;
+  }
+  .check-item:hover { border-color: var(--green); background: var(--green-light); }
+  .check-item.checked { border-color: var(--green); background: var(--green-light); }
+  .check-box {
+    width: 22px; height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.18s;
+    font-size: 13px;
+  }
+  .check-item.checked .check-box {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+  .check-text { font-size: 14px; font-weight: 500; line-height: 1.4; }
+  .check-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; font-weight: 400; }
+
+  /* ── RESOLUTION SCREENS ── */
+  .resolution {
+    text-align: center;
+  }
+  .resolution .res-icon { font-size: 56px; margin-bottom: 16px; }
+  .resolution .res-title {
+    font-size: 22px; font-weight: 700; margin-bottom: 8px;
+  }
+  .resolution .res-body {
+    font-size: 14px; color: var(--text-muted); line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .res-success { }
+  .res-success .res-title { color: var(--green-dark); }
+
+  .res-warning .res-title { color: #b45309; }
+
+  .res-escalate .res-icon { font-size: 48px; }
+  .res-escalate .res-title { color: var(--red); }
+
+  .contact-card {
+    background: #f0f9ff;
+    border: 1.5px solid #bae6fd;
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    margin: 0 0 16px;
+    text-align: left;
+  }
+  .contact-card .c-label {
+    font-size: 11px; font-weight: 600; color: #0369a1;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
+  }
+  .contact-card .c-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px;
+  }
+  .contact-card .c-row:last-child { margin-bottom: 0; }
+  .contact-card .c-icon { font-size: 16px; }
+  .contact-card .c-val { font-size: 14px; font-weight: 600; color: var(--text); }
+  .contact-card .c-val small { display: block; font-size: 12px; font-weight: 400; color: var(--text-muted); }
+
+  .info-box {
+    background: var(--green-light);
+    border: 1.5px solid var(--green-mid);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--green-dark);
+    line-height: 1.5;
+    margin-bottom: 16px;
+    text-align: left;
+  }
+  .info-box strong { display: block; margin-bottom: 4px; }
+
+  .warn-box {
+    background: var(--orange-light);
+    border: 1.5px solid #fcd34d;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #92400e;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    text-align: left;
+  }
+
+  /* ── BACK BUTTON ── */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 0;
+    margin-bottom: 16px;
+    transition: color 0.15s;
+  }
+  .back-btn:hover { color: var(--green); }
+
+  /* ── HOME SCREEN ── */
+  .home-title {
+    text-align: center;
+    padding: 8px 0 20px;
+  }
+  .home-title h1 {
+    font-size: 26px; font-weight: 700; color: var(--text);
+    line-height: 1.2; margin-bottom: 8px;
+  }
+  .home-title p {
+    font-size: 14px; color: var(--text-muted); line-height: 1.5;
+  }
+  .problem-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .problem-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+    text-align: left;
+  }
+  .problem-btn:hover {
+    border-color: var(--green);
+    background: var(--green-light);
+    transform: translateX(4px);
+    box-shadow: var(--shadow);
+  }
+  .problem-btn .p-icon { font-size: 28px; flex-shrink: 0; }
+  .problem-btn .p-text { flex: 1; }
+  .problem-btn .p-label { font-size: 15px; font-weight: 600; color: var(--text); }
+  .problem-btn .p-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .problem-btn .p-arrow { font-size: 16px; color: var(--text-muted); flex-shrink: 0; }
+  .problem-btn.active-only { opacity: 1; }
+  .problem-btn.soon { opacity: 0.45; cursor: default; pointer-events: none; }
+  .problem-btn.soon:hover { transform: none; box-shadow: none; }
+  .soon-tag {
+    font-size: 10px; font-weight: 700; color: var(--text-muted);
+    background: #f3f4f6; padding: 2px 7px; border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px; background: var(--border);
+    margin: 20px 0;
+  }
+
+  /* ── HIDDEN ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── RESTART ── */
+  .restart-btn {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.18s;
+    margin-top: 10px;
+  }
+  .restart-btn:hover { border-color: var(--green); color: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">
+    <div class="dot">G7</div>
+    <div>
+      <span>Troubleshooting</span>
+      <small>Guide PSAD — Dexcom G7</small>
+    </div>
+  </div>
+  <div class="header-badge">IDE / PSAD</div>
+</div>
+
+<!-- PROGRESS (hidden on home) -->
+<div class="progress-wrap" id="progressWrap" style="display:none;">
+  <div class="progress-meta">
+    <span class="progress-label" id="progressCategory">Perte de signal</span>
+    <span class="progress-step" id="progressStepLabel">Étape 1/5</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width:20%"></div>
+  </div>
+</div>
+
+<!-- CARDS WRAP -->
+<div class="card-wrap">
+
+  <!-- ══════════════════════════════
+       SCREEN 0 — ACCUEIL
+  ══════════════════════════════ -->
+  <div class="screen active" id="s0">
+    <div class="home-title">
+      <h1>Quel problème observez-vous ?</h1>
+      <p>Sélectionnez la situation pour démarrer le guide pas à pas</p>
+    </div>
+    <div class="problem-grid">
+      <button class="problem-btn active-only" onclick="goTo('s1')">
+        <span class="p-icon">📶</span>
+        <span class="p-text">
+          <span class="p-label">Perte de signal</span>
+          <span class="p-sub">Le capteur ne communique plus avec l'application</span>
+        </span>
+        <span class="p-arrow">›</span>
+      </button>
+      <button class="problem-btn active-only" onclick="goTo('app1')">
+        <span class="p-icon">📱</span>
+        <span class="p-text">
+          <span class="p-label">Application / Téléphone</span>
+          <span class="p-sub">App crash, Bluetooth off, stockage plein, OS incompatible…</span>
+        </span>
+        <span class="p-arrow">›</span>
+      </button>
+      <button class="problem-btn active-only" onclick="goTo('pair1')">
+        <span class="p-icon">🔗</span>
+        <span class="p-text">
+          <span class="p-label">Problème de jumelage Bluetooth</span>
+          <span class="p-sub">Cannot pair, Pairing Unsuccessful…</span>
+        </span>
+        <span class="p-arrow">›</span>
+      </button>
+      <button class="problem-btn active-only" onclick="goTo('alert1')">
+        <span class="p-icon">🔔</span>
+        <span class="p-text">
+          <span class="p-label">Alertes manquées</span>
+          <span class="p-sub">Alarmes non reçues, notifications silencieuses…</span>
+        </span>
+        <span class="p-arrow">›</span>
+      </button>
+      <button class="problem-btn active-only" onclick="goTo('prec1')">
+        <span class="p-icon">🎯</span>
+        <span class="p-text">
+          <span class="p-label">Précision / Valeurs aberrantes</span>
+          <span class="p-sub">Glycémie CGM très différente du lecteur capillaire…</span>
+        </span>
+        <span class="p-arrow">›</span>
+      </button>
+      <button class="problem-btn active-only" onclick="goTo('sensor1')">
+        <span class="p-icon">📵</span>
+        <span class="p-text">
+          <span class="p-label">Pas de lecture / Capteur en erreur</span>
+          <span class="p-sub">Brief Sensor Issue, Sensor Failed…</span>
+        </span>
+        <span class="p-arrow">›</span>
+      </button>
+      <button class="problem-btn active-only" onclick="goTo('adh1')">
+        <span class="p-icon">🩹</span>
+        <span class="p-text">
+          <span class="p-label">Adhérence / Réaction cutanée</span>
+          <span class="p-sub">Patch décollé, irritation, démangeaisons…</span>
+        </span>
+        <span class="p-arrow">›</span>
+      </button>
+      <button class="problem-btn active-only" onclick="goTo('follow1')">
+        <span class="p-icon">👨‍👩‍👧</span>
+        <span class="p-text">
+          <span class="p-label">Application Follow</span>
+          <span class="p-sub">Le proche ne reçoit plus les données…</span>
+        </span>
+        <span class="p-arrow">›</span>
+      </button>
+      <button class="problem-btn active-only" onclick="goTo('clarity1')">
+        <span class="p-icon">📊</span>
+        <span class="p-text">
+          <span class="p-label">Clarity — Rapports & Accès</span>
+          <span class="p-sub">Connexion, rapport manquant, upload…</span>
+        </span>
+        <span class="p-arrow">›</span>
+      </button>
+      <button class="problem-btn active-only" onclick="goTo('cloud1')">
+        <span class="p-icon">☁️</span>
+        <span class="p-text">
+          <span class="p-label">Cloud Share indisponible</span>
+          <span class="p-sub">Le partage des données est interrompu</span>
+        </span>
+        <span class="p-arrow">›</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       SCREEN 1 — Signal déjà fonctionné ?
+  ══════════════════════════════ -->
+  <div class="screen" id="s1">
+    <button class="back-btn" onclick="goTo('s0')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">📶</div>
+      <div class="card-eyebrow">Perte de signal · Étape 1</div>
+      <div class="card-question">Le signal a-t-il déjà fonctionné avec ce capteur ?</div>
+      <div class="card-hint">C'est-à-dire : le patient a-t-il déjà reçu des lectures glucose depuis la pose de ce capteur ?</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('s2')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('rPairing')">❌ Non</button>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-duration" style="width:100%" onclick="goTo('watch1')">
+          <span class="d-icon">⌚</span>
+          <span class="d-text"><span class="d-label">Perte uniquement sur la montre connectée</span><span class="d-sub">Le téléphone reçoit les données mais pas la montre</span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5200 — Montre connectée -->
+  <div class="screen" id="watch1">
+    <button class="back-btn" onclick="goTo('s1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">⌚</div>
+      <div class="card-eyebrow">Montre connectée · Étape 1</div>
+      <div class="card-question">L'app Dexcom G7 est-elle installée sur la montre ?</div>
+      <div class="card-hint">Sur Apple Watch : App Store de la montre. Sur Garmin/Samsung : store dédié de la marque.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('watch2')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('watch_install')">❌ Non / Pas sûr</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="watch_install">
+    <button class="back-btn" onclick="goTo('watch1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">⌚</div>
+      <div class="card-eyebrow" style="color:#b45309;">App manquante sur la montre</div>
+      <div class="res-title" style="color:#b45309;">Installer l'app sur la montre</div>
+      <div class="info-box"><strong>Procédure :</strong><br>• <strong>Apple Watch :</strong> App Store → rechercher "Dexcom G7" → installer<br>• <strong>Garmin :</strong> Connect IQ Store → rechercher "Dexcom" → installer<br>• <strong>Samsung / Wear OS :</strong> Galaxy Store ou Play Store → rechercher "Dexcom"<br><br>L'app téléphone doit rester ouverte en arrière-plan pour transmettre les données à la montre.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Données sur la montre</button>
+        <button class="btn btn-no" onclick="goTo('watch2')">❌ App installée mais pas de données</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="watch2">
+    <button class="back-btn" onclick="goTo('watch1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">📱</div>
+      <div class="card-eyebrow">Montre connectée · Étape 2</div>
+      <div class="card-question">Le téléphone est-il à proximité de la montre (moins de 10 m) ?</div>
+      <div class="card-hint">La montre reçoit les données G7 via le téléphone, pas directement depuis le capteur. Le téléphone doit être proche.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('watch3')">✅ Oui, proche</button>
+        <button class="btn btn-no" onclick="goTo('watch_range')">❌ Non, loin</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="watch_range">
+    <button class="back-btn" onclick="goTo('watch2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">📏</div>
+      <div class="card-eyebrow" style="color:#b45309;">Distance trop grande</div>
+      <div class="res-title" style="color:#b45309;">Rapprocher téléphone et montre</div>
+      <div class="info-box"><strong>Rappel :</strong> La montre connectée affiche les données G7 relayées par le téléphone via Bluetooth. Le téléphone doit se trouver à moins de 10 mètres de la montre en permanence.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Données revenues sur la montre</button>
+        <button class="btn btn-no" onclick="goTo('watch3')">❌ Toujours pas de données</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="watch3">
+    <button class="back-btn" onclick="goTo('watch2')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🔗</div>
+      <div class="card-eyebrow">Montre connectée · Étape 3</div>
+      <div class="card-question">L'app Dexcom G7 sur le téléphone affiche-t-elle des lectures normales ?</div>
+      <div class="card-hint">Si le téléphone ne reçoit pas non plus les données, c'est un problème de signal ou de capteur, pas de montre.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('watch4')">✅ Oui, téléphone OK</button>
+        <button class="btn btn-no" onclick="goTo('s2')">❌ Non → résoudre d'abord le signal</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="watch4">
+    <button class="back-btn" onclick="goTo('watch3')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">⌚</div>
+      <div class="card-eyebrow" style="color:#b45309;">Téléphone OK — problème montre</div>
+      <div class="res-title" style="color:#b45309;">Réinitialiser la connexion montre</div>
+      <div class="info-box"><strong>Actions dans l'ordre :</strong><br>1. Redémarrer la montre<br>2. Sur le téléphone : fermer et rouvrir l'app G7<br>3. Vérifier que la montre est bien jumelée au téléphone (Bluetooth montre → téléphone)<br>4. Désinstaller / réinstaller l'app Dexcom sur la montre</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Données revenues sur la montre</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Toujours en échec → SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       SCREEN 2 — Distance
+  ══════════════════════════════ -->
+  <div class="screen" id="s2">
+    <button class="back-btn" onclick="goTo('s1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">📏</div>
+      <div class="card-eyebrow">Perte de signal · Étape 2</div>
+      <div class="card-question">Le téléphone était-il loin du capteur ?</div>
+      <div class="card-hint">Plus de 6 mètres pendant plus de 15 minutes (ex. téléphone laissé dans une autre pièce, voiture…)</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('rDistance')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('s3')">❌ Non</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       SCREEN 3 — Bluetooth activé ?
+  ══════════════════════════════ -->
+  <div class="screen" id="s3">
+    <button class="back-btn" onclick="goTo('s2')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🔵</div>
+      <div class="card-eyebrow">Perte de signal · Étape 3</div>
+      <div class="card-question">Le Bluetooth est-il activé sur le téléphone ?</div>
+      <div class="card-hint">Vérifier dans le Centre de contrôle (iOS) ou les Paramètres rapides (Android) — l'icône doit être bleue/activée.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('s4')">✅ Oui, activé</button>
+        <button class="btn btn-no" onclick="goTo('rBluetooth')">❌ Non / Inconnu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       SCREEN 4 — Durée de la perte
+  ══════════════════════════════ -->
+  <div class="screen" id="s4">
+    <button class="back-btn" onclick="goTo('s3')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">⏱️</div>
+      <div class="card-eyebrow">Perte de signal · Étape 4</div>
+      <div class="card-question">Depuis combien de temps le signal est-il perdu ?</div>
+      <div class="card-hint">Regardez la dernière lecture affichée dans l'application Dexcom G7.</div>
+      <div class="btn-group">
+        <button class="btn btn-duration" onclick="goTo('rMoins15')">
+          <span class="d-icon">🟢</span>
+          <span class="d-text">
+            <span class="d-label">Moins de 15 minutes</span>
+            <span class="d-sub">Interruption très récente</span>
+          </span>
+        </button>
+        <button class="btn btn-duration" onclick="goTo('s5')">
+          <span class="d-icon">🟡</span>
+          <span class="d-text">
+            <span class="d-label">15 minutes à 3 heures</span>
+            <span class="d-sub">Perte persistante</span>
+          </span>
+        </button>
+        <button class="btn btn-duration" onclick="goTo('rSAV')">
+          <span class="d-icon">🔴</span>
+          <span class="d-text">
+            <span class="d-label">Plus de 3 heures</span>
+            <span class="d-sub">Défaillance probable du capteur</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       SCREEN 5 — Checklist 3 actions
+  ══════════════════════════════ -->
+  <div class="screen" id="s5">
+    <button class="back-btn" onclick="goTo('s4')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🛠️</div>
+      <div class="card-eyebrow">Perte de signal · Étape 5</div>
+      <div class="card-question">Effectuez ces 3 actions dans l'ordre</div>
+      <div class="card-hint">Cochez chaque action au fur et à mesure, puis attendez 5 minutes après la dernière.</div>
+      <div class="checklist" id="checklist">
+        <div class="check-item" onclick="toggleCheck(this)" id="ci0">
+          <div class="check-box">✓</div>
+          <div class="check-text">
+            Fermer et rouvrir l'app Dexcom G7
+            <div class="check-sub">Appuyer sur le bouton Accueil, swipe-up pour fermer l'app, puis la rouvrir</div>
+          </div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)" id="ci1">
+          <div class="check-box">✓</div>
+          <div class="check-text">
+            Désactiver puis réactiver le Bluetooth
+            <div class="check-sub">Réglages → Bluetooth → éteindre 10 sec → rallumer</div>
+          </div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)" id="ci2">
+          <div class="check-box">✓</div>
+          <div class="check-text">
+            Redémarrer le téléphone
+            <div class="check-sub">Attendre que le téléphone soit complètement rallumé, puis ouvrir l'app G7</div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Signal revenu !</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Toujours pas de signal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       RÉSOLUTION A — Distance
+  ══════════════════════════════ -->
+  <div class="screen" id="rDistance">
+    <button class="back-btn" onclick="goTo('s2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">📏</div>
+      <div class="card-eyebrow" style="color:#b45309;">Cause identifiée</div>
+      <div class="res-title" style="color:#b45309;">Distance trop grande</div>
+      <div class="info-box">
+        <strong>Action à effectuer :</strong>
+        Rapprocher le téléphone du capteur (moins de 6 m) et attendre <strong>5 minutes</strong>. Le signal devrait se rétablir automatiquement.
+      </div>
+      <div class="warn-box">
+        ⚠️ Rappel : le Dexcom G7 nécessite que le téléphone reste dans un rayon de 6 mètres pour maintenir la connexion Bluetooth.
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Signal revenu</button>
+        <button class="btn btn-no" onclick="goTo('s3')">❌ Toujours pas de signal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       RÉSOLUTION B — Bluetooth off
+  ══════════════════════════════ -->
+  <div class="screen" id="rBluetooth">
+    <button class="back-btn" onclick="goTo('s3')">← Retour</button>
+    <div class="card resolution">
+      <div class="res-icon">🔵</div>
+      <div class="card-eyebrow" style="color:#b45309;">Cause identifiée</div>
+      <div class="res-title" style="color:#b45309;">Bluetooth désactivé</div>
+      <div class="info-box">
+        <strong>Action à effectuer :</strong>
+        Activer le Bluetooth dans les Réglages du téléphone, puis ouvrir l'app Dexcom G7 et attendre <strong>5 minutes</strong>.
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Signal revenu</button>
+        <button class="btn btn-no" onclick="goTo('s5')">❌ Toujours pas, continuer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       RÉSOLUTION C — Moins de 15 min
+  ══════════════════════════════ -->
+  <div class="screen" id="rMoins15">
+    <button class="back-btn" onclick="goTo('s4')">← Retour</button>
+    <div class="card resolution res-success">
+      <div class="res-icon">⏳</div>
+      <div class="card-eyebrow" style="color:var(--green);">Interruption courte</div>
+      <div class="res-title" style="color:var(--green-dark);">Attente recommandée</div>
+      <div class="info-box">
+        <strong>Ce qu'il faut faire :</strong>
+        Les interruptions de moins de 15 minutes se résolvent généralement seules. Attendre que le signal revienne, sans manipuler le capteur ni redémarrer l'app.
+      </div>
+      <div class="warn-box">
+        ⚠️ Pendant cette période, le patient doit utiliser un glucomètre capillaire pour ses décisions thérapeutiques.
+      </div>
+      <button class="btn btn-primary" onclick="goTo('rOK')">✅ Signal revenu, terminer</button>
+      <button class="restart-btn" onclick="goTo('s5')">Le signal ne revient pas → continuer</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       RÉSOLUTION — Rediriger Pairing
+  ══════════════════════════════ -->
+  <div class="screen" id="rPairing">
+    <button class="back-btn" onclick="goTo('s1')">← Retour</button>
+    <div class="card resolution">
+      <div class="res-icon">🔗</div>
+      <div class="card-eyebrow" style="color:var(--green);">Redirection</div>
+      <div class="res-title">Ce n'est pas une perte de signal</div>
+      <div class="res-body">Si le capteur n'a jamais fonctionné depuis sa pose, il s'agit probablement d'un problème de <strong>jumelage Bluetooth</strong> ou d'une <strong>erreur capteur</strong>.</div>
+      <button class="btn btn-primary" onclick="goTo('s0')">← Revenir au menu principal</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       RÉSOLUTION — SAV
+  ══════════════════════════════ -->
+  <div class="screen" id="rSAV">
+    <button class="back-btn" onclick="goTo('s5')">← Retour</button>
+    <div class="card resolution res-escalate">
+      <div class="res-icon">📞</div>
+      <div class="card-eyebrow" style="color:var(--red);">Escalade nécessaire</div>
+      <div class="res-title">Contacter le SAV Dexcom</div>
+      <div class="res-body">Le problème persiste après toutes les vérifications. En tant qu'IDE PSAD, vous seul(e) êtes habilité(e) à contacter l'équipe SAV Dexcom.</div>
+      <div class="contact-card">
+        <div class="c-label">Contacts SAV Dexcom — IDE PSAD</div>
+        <div class="c-row">
+          <span class="c-icon">📧</span>
+          <span class="c-val"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bfcfcddacccbdecbded6cdda91cbdadcd7cccacfcfd0cdcbffdbdac7dcd0d291dcd0d2">[email&#160;protected]</a><small>Réponse sous 24–48h ouvrées</small></span>
+        </div>
+        <div class="c-row">
+          <span class="c-icon">📞</span>
+          <span class="c-val">0 800 940 465 — tapez 2<small>Numéro gratuit, heures ouvrées</small></span>
+        </div>
+      </div>
+      <div class="warn-box">
+        ⚠️ Pendant l'attente, le patient doit utiliser son glucomètre capillaire pour toutes les décisions thérapeutiques.
+      </div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       RÉSOLUTION — ✅ OK
+  ══════════════════════════════ -->
+  <div class="screen" id="rOK">
+    <div class="card resolution res-success" style="text-align:center; padding-top:36px; padding-bottom:36px;">
+      <div class="res-icon">🎉</div>
+      <div class="res-title" style="color:var(--green-dark); font-size:26px; margin-bottom:12px;">Problème résolu !</div>
+      <div class="res-body" style="margin-bottom:24px;">Le signal Dexcom G7 est rétabli. Vérifiez que les lectures reprennent bien dans l'app.</div>
+      <div class="info-box" style="text-align:left;">
+        <strong>Conseil pour éviter la récurrence :</strong>
+        Rappeler au patient de garder son téléphone dans un rayon de 6 m du capteur, et de ne pas fermer l'app G7 en arrière-plan.
+      </div>
+      <button class="btn btn-primary" onclick="goTo('s0')">↩ Retour au menu</button>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       BRANCHE 2 — APPLICATION / TÉLÉPHONE
+  ══════════════════════════════════════════════════ -->
+  <div class="screen" id="app1">
+    <button class="back-btn" onclick="goTo('s0')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">📱</div>
+      <div class="card-eyebrow">Application / Téléphone · Étape 1</div>
+      <div class="card-question">Quel problème observez-vous sur l'app ?</div>
+      <div class="card-hint">Sélectionnez la situation la plus proche de ce que vous voyez.</div>
+      <div class="btn-group">
+        <button class="btn btn-duration" onclick="goTo('app_crash1')">
+          <span class="d-icon">💥</span>
+          <span class="d-text"><span class="d-label">L'app se ferme / plante</span><span class="d-sub">Fermeture inattendue, écran noir, app qui freeze</span></span>
+        </button>
+        <button class="btn btn-duration" onclick="goTo('app_bt1')">
+          <span class="d-icon">🔵</span>
+          <span class="d-text"><span class="d-label">"Bluetooth désactivé" affiché</span><span class="d-sub">Message d'avertissement Bluetooth dans l'app</span></span>
+        </button>
+        <button class="btn btn-duration" onclick="goTo('app_storage1')">
+          <span class="d-icon">💾</span>
+          <span class="d-text"><span class="d-label">Stockage téléphone plein</span><span class="d-sub">"App Stopped: Phone Storage Full"</span></span>
+        </button>
+        <button class="btn btn-duration" onclick="goTo('app_os1')">
+          <span class="d-icon">⚙️</span>
+          <span class="d-text"><span class="d-label">App incompatible / OS non supporté</span><span class="d-sub">"Incompatible iOS / Android" affiché</span></span>
+        </button>
+        <button class="btn btn-duration" onclick="goTo('app_clock1')">
+          <span class="d-icon">🕐</span>
+          <span class="d-text"><span class="d-label">Message "Adjusting clock"</span><span class="d-sub">L'app affiche un message d'ajustement de l'heure</span></span>
+        </button>
+        <button class="btn btn-duration" onclick="goTo('app_country1')">
+          <span class="d-icon">🌍</span>
+          <span class="d-text"><span class="d-label">Erreur "Country of residence"</span><span class="d-sub">L'app indique un problème de pays de résidence</span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 235 — Country of residence -->
+  <div class="screen" id="app_country1">
+    <button class="back-btn" onclick="goTo('app1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🌍</div>
+      <div class="card-eyebrow">Country of residence · Étape 1</div>
+      <div class="card-question">Le patient utilise-t-il un VPN sur son téléphone ?</div>
+      <div class="card-hint">Un VPN peut faire croire à l'app que le patient se trouve dans un autre pays, déclenchant cette erreur.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('app_country_vpn')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('app_country2')">❌ Non</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_country_vpn">
+    <button class="back-btn" onclick="goTo('app_country1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🌍</div>
+      <div class="card-eyebrow" style="color:#b45309;">Cause identifiée — VPN actif</div>
+      <div class="res-title" style="color:#b45309;">Désactiver le VPN</div>
+      <div class="info-box"><strong>Action :</strong> Désactiver le VPN dans les Réglages du téléphone, fermer et rouvrir l'app Dexcom G7. L'erreur devrait disparaître immédiatement.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Erreur disparue</button>
+        <button class="btn btn-no" onclick="goTo('app_country2')">❌ Toujours affichée</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_country2">
+    <button class="back-btn" onclick="goTo('app_country1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🌍</div>
+      <div class="card-eyebrow">Country of residence · Étape 2</div>
+      <div class="card-question">Le patient se trouve-t-il temporairement à l'étranger ?</div>
+      <div class="card-hint">L'app G7 vérifie la localisation du téléphone. Un séjour hors du pays d'inscription du compte peut déclencher cette erreur.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('app_country_travel')">✅ Oui, voyage temporaire</button>
+        <button class="btn btn-no" onclick="goTo('app_country_perm')">❌ Non, résidence permanente</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_country_travel">
+    <button class="back-btn" onclick="goTo('app_country2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">✈️</div>
+      <div class="card-eyebrow" style="color:#b45309;">Voyage temporaire</div>
+      <div class="res-title" style="color:#b45309;">L'erreur se résoudra au retour</div>
+      <div class="info-box"><strong>En attendant :</strong><br>1. Désactiver le Wi-Fi et essayer en données mobiles (ou inversement)<br>2. Fermer et rouvrir l'app G7<br>3. Vérifier que les services de localisation sont activés pour l'app G7<br><br>L'erreur disparaît automatiquement quand le patient rentre dans son pays de résidence.</div>
+      <div class="warn-box">⚠️ Pendant cette période, utiliser le lecteur capillaire pour les décisions thérapeutiques si l'app ne fonctionne pas.</div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <div class="screen" id="app_country_perm">
+    <button class="back-btn" onclick="goTo('app_country2')">← Retour</button>
+    <div class="card resolution res-escalate">
+      <div class="res-icon">🌍</div>
+      <div class="card-eyebrow" style="color:var(--red);">Changement de pays permanent</div>
+      <div class="res-title">Contacter le SAV Dexcom</div>
+      <div class="res-body">Si le patient a définitivement déménagé dans un autre pays, un nouveau compte Dexcom doit être créé avec le pays de résidence correct. Cette opération ne peut pas être faite en autonomie.</div>
+      <div class="contact-card">
+        <div class="c-label">SAV Dexcom — changement de pays</div>
+        <div class="c-row"><span class="c-icon">📧</span><span class="c-val">prestataire.techsupport@dexcom.com</span></div>
+        <div class="c-row"><span class="c-icon">📞</span><span class="c-val">0 800 940 465 — tapez 2</span></div>
+      </div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <!-- APP CRASH 1 -->
+  <div class="screen" id="app_crash1">
+    <button class="back-btn" onclick="goTo('app1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">💥</div>
+      <div class="card-eyebrow">App crash · Étape 1</div>
+      <div class="card-question">L'app Dexcom G7 a-t-elle déjà fonctionné sur ce téléphone ?</div>
+      <div class="card-hint">Le patient a-t-il déjà reçu des lectures via cette app sur cet appareil ?</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('app_crash2')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('app_crash_install')">❌ Non / Nouvelle install</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_crash2">
+    <button class="back-btn" onclick="goTo('app_crash1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🔍</div>
+      <div class="card-eyebrow">App crash · Étape 2</div>
+      <div class="card-question">Le crash se produit-il toujours au même moment ?</div>
+      <div class="card-hint">Par exemple : à l'ouverture, en entrant un événement, en consultant le graphique…</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('app_crash3')">✅ Oui, toujours pareil</button>
+        <button class="btn btn-no" onclick="goTo('app_crash3')">❌ Non, aléatoire</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_crash3">
+    <button class="back-btn" onclick="goTo('app_crash2')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🛠️</div>
+      <div class="card-eyebrow">App crash · Étape 3</div>
+      <div class="card-question">Effectuez ces actions dans l'ordre</div>
+      <div class="card-hint">Cochez chaque étape au fur et à mesure.</div>
+      <div class="checklist">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Redémarrer le téléphone<div class="check-sub">Éteindre complètement, puis rallumer</div></div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Désinstaller l'app Dexcom G7<div class="check-sub">Appui long sur l'icône → Supprimer l'app</div></div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Réinstaller depuis l'App Store / Google Play<div class="check-sub">Rechercher "Dexcom G7" et installer la dernière version</div></div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Rouvrir l'app et attendre 5 minutes<div class="check-sub">Garder l'app ouverte en premier plan</div></div></div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ L'app fonctionne</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Toujours en erreur</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_crash_install">
+    <button class="back-btn" onclick="goTo('app_crash1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">📲</div>
+      <div class="card-eyebrow">Nouvelle installation</div>
+      <div class="card-question">Le téléphone est-il compatible avec Dexcom G7 ?</div>
+      <div class="info-box"><strong>Vérifier la compatibilité ici :</strong> dexcom.com/compatibility — saisir le modèle exact du téléphone et la version iOS / Android.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('app_crash3')">✅ Oui, compatible</button>
+        <button class="btn btn-no" onclick="goTo('app_incompat')">❌ Non compatible</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_incompat">
+    <button class="back-btn" onclick="goTo('app_crash_install')">← Retour</button>
+    <div class="card resolution">
+      <div class="res-icon">📵</div>
+      <div class="card-eyebrow" style="color:#b45309;">Incompatibilité détectée</div>
+      <div class="res-title" style="color:#b45309;">Téléphone non compatible</div>
+      <div class="res-body">Le téléphone du patient ne figure pas sur la liste de compatibilité Dexcom G7. L'application ne peut pas fonctionner sur cet appareil.</div>
+      <div class="warn-box">⚠️ Le patient devra utiliser un téléphone compatible ou le récepteur Dexcom dédié.</div>
+      <div class="contact-card">
+        <div class="c-label">Contacts SAV Dexcom — IDE PSAD</div>
+        <div class="c-row"><span class="c-icon">📧</span><span class="c-val">prestataire.techsupport@dexcom.com</span></div>
+        <div class="c-row"><span class="c-icon">📞</span><span class="c-val">0 800 940 465 — tapez 2</span></div>
+      </div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <!-- BLUETOOTH OFF -->
+  <div class="screen" id="app_bt1">
+    <button class="back-btn" onclick="goTo('app1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🔵</div>
+      <div class="card-eyebrow">Bluetooth désactivé · Étape 1</div>
+      <div class="card-question">Le Bluetooth est-il bien activé dans les Réglages du téléphone ?</div>
+      <div class="card-hint">Attention : activer le Bluetooth depuis le Centre de contrôle ne suffit pas toujours. Vérifier dans Réglages → Bluetooth.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('app_bt2')">✅ Oui, activé</button>
+        <button class="btn btn-no" onclick="goTo('app_bt_off')">❌ Non / Était désactivé</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_bt_off">
+    <button class="back-btn" onclick="goTo('app_bt1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🔵</div>
+      <div class="card-eyebrow" style="color:#b45309;">Cause identifiée</div>
+      <div class="res-title" style="color:#b45309;">Bluetooth était désactivé</div>
+      <div class="info-box"><strong>Action :</strong> Activer le Bluetooth dans Réglages → Bluetooth, puis rouvrir l'app Dexcom G7 et attendre 5 minutes.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Signal revenu</button>
+        <button class="btn btn-no" onclick="goTo('app_bt2')">❌ Toujours le message</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_bt2">
+    <button class="back-btn" onclick="goTo('app_bt1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">✈️</div>
+      <div class="card-eyebrow">Bluetooth désactivé · Étape 2</div>
+      <div class="card-question">Le téléphone est-il en mode avion ?</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('app_bt_avion')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('app_bt3')">❌ Non</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_bt_avion">
+    <button class="back-btn" onclick="goTo('app_bt2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">✈️</div>
+      <div class="card-eyebrow" style="color:#b45309;">Cause identifiée</div>
+      <div class="res-title" style="color:#b45309;">Mode avion activé</div>
+      <div class="info-box"><strong>Action :</strong> Désactiver le mode avion dans les Réglages, puis vérifier que le Bluetooth est actif et rouvrir l'app G7.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Problème résolu</button>
+        <button class="btn btn-no" onclick="goTo('app_bt3')">❌ Toujours le message</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_bt3">
+    <button class="back-btn" onclick="goTo('app_bt2')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🔐</div>
+      <div class="card-eyebrow">Bluetooth désactivé · Étape 3</div>
+      <div class="card-question">L'app Dexcom G7 a-t-elle les permissions Bluetooth accordées ?</div>
+      <div class="card-hint">iOS : Réglages → Dexcom G7 → Bluetooth → Activé.<br>Android : Réglages → Apps → Dexcom G7 → Autorisations → Appareils à proximité → Autoriser.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('app_crash3')">✅ Oui, autorisé</button>
+        <button class="btn btn-no" onclick="goTo('app_bt_perm')">❌ Non / Refusé</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_bt_perm">
+    <button class="back-btn" onclick="goTo('app_bt3')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🔐</div>
+      <div class="card-eyebrow" style="color:#b45309;">Cause identifiée</div>
+      <div class="res-title" style="color:#b45309;">Permission Bluetooth refusée</div>
+      <div class="info-box"><strong>iOS :</strong> Réglages → Dexcom G7 → activer Bluetooth<br><br><strong>Android :</strong> Réglages → Apps → Dexcom G7 → Autorisations → Appareils à proximité → Autoriser en permanence</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Problème résolu</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Toujours le message</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STOCKAGE PLEIN -->
+  <div class="screen" id="app_storage1">
+    <button class="back-btn" onclick="goTo('app1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">💾</div>
+      <div class="card-eyebrow" style="color:#b45309;">Stockage insuffisant</div>
+      <div class="res-title" style="color:#b45309;">Libérer de l'espace sur le téléphone</div>
+      <div class="res-body">L'app Dexcom G7 nécessite au minimum <strong>50 Mo</strong> d'espace libre. Aucune lecture ni alerte ne sera reçue tant que le stockage est insuffisant.</div>
+      <div class="info-box"><strong>Actions :</strong> 1. Supprimer des photos, vidéos ou apps inutilisées<br>2. Vider la corbeille / les fichiers temporaires<br>3. Rouvrir l'app Dexcom G7</div>
+      <div class="warn-box">⚠️ Pendant cette période, le patient doit utiliser un glucomètre capillaire.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Espace libéré, app fonctionne</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Impossible de libérer de l'espace</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OS INCOMPATIBLE -->
+  <div class="screen" id="app_os1">
+    <button class="back-btn" onclick="goTo('app1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">⚙️</div>
+      <div class="card-eyebrow">OS incompatible · Étape 1</div>
+      <div class="card-question">Le système d'exploitation a-t-il été mis à jour récemment ?</div>
+      <div class="card-hint">Une mise à jour iOS ou Android peut temporairement bloquer l'app si Dexcom n'a pas encore validé la nouvelle version.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('app_os_update')">✅ Oui, récemment</button>
+        <button class="btn btn-no" onclick="goTo('app_os2')">❌ Non</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_os_update">
+    <button class="back-btn" onclick="goTo('app_os1')">← Retour</button>
+    <div class="card resolution">
+      <div class="res-icon">⏳</div>
+      <div class="card-eyebrow" style="color:#b45309;">Mise à jour OS récente</div>
+      <div class="res-title" style="color:#b45309;">Attente de validation Dexcom</div>
+      <div class="res-body">Dexcom doit valider chaque nouvelle version iOS/Android. Ce processus peut prendre quelques jours.</div>
+      <div class="info-box"><strong>En attendant :</strong> Le patient peut utiliser le récepteur Dexcom dédié s'il en dispose. Vérifier régulièrement les mises à jour de l'app G7 sur l'App Store / Google Play.</div>
+      <div class="warn-box">⚠️ Pendant cette période, utiliser le glucomètre capillaire.</div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <div class="screen" id="app_os2">
+    <button class="back-btn" onclick="goTo('app_os1')">← Retour</button>
+    <div class="card resolution">
+      <div class="res-icon">🔍</div>
+      <div class="card-eyebrow" style="color:#b45309;">Vérification nécessaire</div>
+      <div class="res-title" style="color:#b45309;">Vérifier la compatibilité</div>
+      <div class="info-box"><strong>Étapes :</strong> 1. Vérifier la version iOS/Android<br>2. Consulter dexcom.com/compatibility<br>3. Si incompatible → contacter le SAV</div>
+      <div class="contact-card">
+        <div class="c-label">Contacts SAV Dexcom — IDE PSAD</div>
+        <div class="c-row"><span class="c-icon">📧</span><span class="c-val">prestataire.techsupport@dexcom.com</span></div>
+        <div class="c-row"><span class="c-icon">📞</span><span class="c-val">0 800 940 465 — tapez 2</span></div>
+      </div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <!-- ADJUSTING CLOCK -->
+  <div class="screen" id="app_clock1">
+    <button class="back-btn" onclick="goTo('app1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🕐</div>
+      <div class="card-eyebrow">Adjusting clock · Étape 1</div>
+      <div class="card-question">L'heure du téléphone a-t-elle été modifiée manuellement ?</div>
+      <div class="card-hint">Ce message apparaît quand la date/heure a été changée dans les Réglages (hors changement automatique de fuseau horaire).</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('app_clock_manual')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('app_clock2')">❌ Non</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_clock_manual">
+    <button class="back-btn" onclick="goTo('app_clock1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🕐</div>
+      <div class="card-eyebrow" style="color:#b45309;">Cause identifiée</div>
+      <div class="res-title" style="color:#b45309;">Heure modifiée manuellement</div>
+      <div class="info-box"><strong>Action :</strong> Réglages → Général → Date et heure → activer "Réglage automatique". Si après 10 minutes le message persiste : désinstaller et réinstaller l'app.</div>
+      <div class="warn-box">⚠️ Aucune lecture pendant cette période. Utiliser le glucomètre capillaire.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Message disparu</button>
+        <button class="btn btn-no" onclick="goTo('app_crash3')">❌ Toujours affiché → réinstaller</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_clock2">
+    <button class="back-btn" onclick="goTo('app_clock1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🌐</div>
+      <div class="card-eyebrow">Adjusting clock · Étape 2</div>
+      <div class="card-question">Le téléphone est-il connecté à internet ?</div>
+      <div class="card-hint">Wi-Fi ou données mobiles — une connexion est nécessaire pour synchroniser l'heure avec le cloud Dexcom.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('app_clock_wait')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('app_clock_nointernet')">❌ Non</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_clock_wait">
+    <button class="back-btn" onclick="goTo('app_clock2')">← Retour</button>
+    <div class="card resolution res-success">
+      <div class="res-icon">⏳</div>
+      <div class="card-eyebrow" style="color:var(--green);">Résolution en cours</div>
+      <div class="res-title" style="color:var(--green-dark);">Attendre 10 minutes</div>
+      <div class="info-box"><strong>Ce message se résout seul</strong> une fois la synchronisation avec le cloud Dexcom effectuée. Ne pas fermer l'app, ne pas redémarrer le téléphone.</div>
+      <div class="warn-box">⚠️ Aucune lecture pendant cette période. Utiliser le glucomètre capillaire.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Message disparu</button>
+        <button class="btn btn-no" onclick="goTo('app_crash3')">❌ Toujours affiché après 10 min</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="app_clock_nointernet">
+    <button class="back-btn" onclick="goTo('app_clock2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🌐</div>
+      <div class="card-eyebrow" style="color:#b45309;">Connexion requise</div>
+      <div class="res-title" style="color:#b45309;">Connecter le téléphone à internet</div>
+      <div class="info-box"><strong>Action :</strong> Activer le Wi-Fi ou les données mobiles, puis attendre 10 minutes.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Message disparu</button>
+        <button class="btn btn-no" onclick="goTo('app_crash3')">❌ Toujours affiché</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       BRANCHE 3 — JUMELAGE BLUETOOTH
+  ══════════════════════════════════════════════════ -->
+  <div class="screen" id="pair1">
+    <button class="back-btn" onclick="goTo('s0')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🔗</div>
+      <div class="card-eyebrow">Jumelage Bluetooth · Étape 1</div>
+      <div class="card-question">Quel message s'affiche sur l'application ?</div>
+      <div class="card-hint">Regardez l'écran de l'app Dexcom G7 et sélectionnez le plus proche.</div>
+      <div class="btn-group">
+        <button class="btn btn-duration" onclick="goTo('pair2')"><span class="d-icon">❌</span><span class="d-text"><span class="d-label">"Cannot pair sensor" ou "Pairing Unsuccessful"</span><span class="d-sub">Échec du jumelage affiché dans l'app</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('pair_new')"><span class="d-icon">🔍</span><span class="d-text"><span class="d-label">"Searching for sensor" — en attente</span><span class="d-sub">L'app cherche le capteur sans succès</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('pair_multi')"><span class="d-icon">📱</span><span class="d-text"><span class="d-label">Jumelage ok sur un appareil, pas sur l'autre</span><span class="d-sub">Plusieurs appareils utilisés (téléphone + récepteur)</span></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="pair2">
+    <button class="back-btn" onclick="goTo('pair1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🔢</div>
+      <div class="card-eyebrow">Jumelage Bluetooth · Étape 2</div>
+      <div class="card-question">Le code de jumelage (4 chiffres) est-il saisi correctement ?</div>
+      <div class="card-hint">Le code figure sur l'emballage du capteur G7. Il est différent du numéro de série.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('pair3')">✅ Oui, vérifié</button>
+        <button class="btn btn-no" onclick="goTo('pair_code')">❌ À vérifier</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="pair_code">
+    <button class="back-btn" onclick="goTo('pair2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🔢</div>
+      <div class="card-eyebrow" style="color:#b45309;">Code à corriger</div>
+      <div class="res-title" style="color:#b45309;">Ressaisir le code de jumelage</div>
+      <div class="info-box"><strong>Action :</strong> Dans l'app G7 → Paramètres → Supprimer le code existant → Ressaisir le code à 4 chiffres figurant sur l'emballage du capteur. Puis attendre 2 minutes.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Jumelage réussi</button>
+        <button class="btn btn-no" onclick="goTo('pair3')">❌ Toujours en échec</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="pair3">
+    <button class="back-btn" onclick="goTo('pair2')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">📱</div>
+      <div class="card-eyebrow">Jumelage Bluetooth · Étape 3</div>
+      <div class="card-question">Le capteur est-il déjà jumelé à un autre appareil ?</div>
+      <div class="card-hint">Un capteur G7 ne peut être jumelé qu'à un seul appareil à la fois. Si un autre téléphone ou récepteur est connecté, cela bloque le jumelage.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('pair_multi')">✅ Oui, autre appareil</button>
+        <button class="btn btn-no" onclick="goTo('pair4')">❌ Non, seul appareil</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="pair_multi">
+    <button class="back-btn" onclick="goTo('pair3')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">📱</div>
+      <div class="card-eyebrow" style="color:#b45309;">Conflit d'appareils</div>
+      <div class="res-title" style="color:#b45309;">Dissocier l'ancien appareil</div>
+      <div class="info-box"><strong>Action :</strong> Sur l'ancien appareil → ouvrir l'app G7 → Paramètres → Supprimer le capteur des appareils Bluetooth. Ou dans Réglages Bluetooth du téléphone → "Oublier" le capteur. Attendre 20 minutes puis rejumeler.</div>
+      <div class="warn-box">⚠️ Si l'ancien téléphone n'est plus accessible, éteindre-le complètement ou l'éloigner de plus de 10 mètres.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Jumelage réussi</button>
+        <button class="btn btn-no" onclick="goTo('pair4')">❌ Toujours en échec</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="pair4">
+    <button class="back-btn" onclick="goTo('pair3')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🛠️</div>
+      <div class="card-eyebrow">Jumelage Bluetooth · Étape 4</div>
+      <div class="card-question">Effectuez ces actions dans l'ordre</div>
+      <div class="checklist">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Fermer l'app G7 complètement (swipe-up)<div class="check-sub">Ne pas juste appuyer sur Accueil</div></div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Désactiver / réactiver le Bluetooth<div class="check-sub">Réglages → Bluetooth → éteindre 10s → rallumer</div></div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Redémarrer le téléphone<div class="check-sub">Éteindre complètement puis rallumer</div></div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Rouvrir l'app et ressaisir le code à 4 chiffres<div class="check-sub">Attendre 5 minutes après la saisie</div></div></div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Jumelage réussi</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Échec persistant → SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="pair_new">
+    <button class="back-btn" onclick="goTo('pair1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">⏳</div>
+      <div class="card-eyebrow" style="color:#b45309;">Capteur en recherche</div>
+      <div class="res-title" style="color:#b45309;">Vérifications à effectuer</div>
+      <div class="info-box"><strong>Points à vérifier :</strong><br>1. Le capteur est-il correctement inséré et l'applicateur retiré ?<br>2. Le code à 4 chiffres est-il bien saisi dans l'app ?<br>3. Attendre 5 minutes après insertion avant de tenter le jumelage.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Jumelage réussi</button>
+        <button class="btn btn-no" onclick="goTo('pair2')">❌ Toujours en recherche</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       BRANCHE 4 — ALERTES MANQUÉES
+  ══════════════════════════════════════════════════ -->
+  <div class="screen" id="alert1">
+    <button class="back-btn" onclick="goTo('s0')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🔔</div>
+      <div class="card-eyebrow">Alertes manquées · Étape 1</div>
+      <div class="card-question">Quel type d'alerte n'a pas été reçu ?</div>
+      <div class="btn-group">
+        <button class="btn btn-duration" onclick="goTo('alert2')"><span class="d-icon">📉</span><span class="d-text"><span class="d-label">Alerte hypoglycémie / hyperglycémie</span><span class="d-sub">Seuil bas ou haut non signalé</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('alert2')"><span class="d-icon">📶</span><span class="d-text"><span class="d-label">Alerte technique (signal, capteur…)</span><span class="d-sub">Perte de signal ou erreur capteur sans notification</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('alert_sched')"><span class="d-icon">🌙</span><span class="d-text"><span class="d-label">Alertes silencieuses la nuit uniquement</span><span class="d-sub">Problème limité à certaines heures</span></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="alert2">
+    <button class="back-btn" onclick="goTo('alert1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🔕</div>
+      <div class="card-eyebrow">Alertes manquées · Étape 2</div>
+      <div class="card-question">Le téléphone était-il en mode silencieux ou "Ne pas déranger" ?</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('alert_vol')">✅ Oui / Possible</button>
+        <button class="btn btn-no" onclick="goTo('alert3')">❌ Non</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="alert_vol">
+    <button class="back-btn" onclick="goTo('alert2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🔊</div>
+      <div class="card-eyebrow" style="color:#b45309;">Cause probable identifiée</div>
+      <div class="res-title" style="color:#b45309;">Mode silencieux / Ne pas déranger</div>
+      <div class="info-box"><strong>À vérifier :</strong><br>1. Désactiver le mode silencieux<br>2. iOS : Réglages → Concentration → vérifier qu'aucun profil n'est actif<br>3. Dans l'app G7 → Alertes → activer "Always Sound" pour les alertes urgentes<br>4. Vérifier que les alertes critiques Dexcom sont autorisées même en silencieux</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Alertes reçues</button>
+        <button class="btn btn-no" onclick="goTo('alert3')">❌ Toujours pas d'alerte</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="alert3">
+    <button class="back-btn" onclick="goTo('alert2')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">📳</div>
+      <div class="card-eyebrow">Alertes manquées · Étape 3</div>
+      <div class="card-question">Les notifications de l'app Dexcom G7 sont-elles activées sur le téléphone ?</div>
+      <div class="card-hint">iOS : Réglages → Notifications → Dexcom G7 → Autoriser les notifications → Activé.<br>Android : Réglages → Apps → Dexcom G7 → Notifications → Activé.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('alert4')">✅ Oui, activées</button>
+        <button class="btn btn-no" onclick="goTo('alert_notif')">❌ Non / Désactivées</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="alert_notif">
+    <button class="back-btn" onclick="goTo('alert3')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">📳</div>
+      <div class="card-eyebrow" style="color:#b45309;">Cause identifiée</div>
+      <div class="res-title" style="color:#b45309;">Notifications désactivées</div>
+      <div class="info-box"><strong>iOS :</strong> Réglages → Notifications → Dexcom G7 → Autoriser les notifications → Activé + Alertes critiques → Activé<br><br><strong>Android :</strong> Réglages → Apps → Dexcom G7 → Notifications → Tout activer + accorder l'accès "Ne pas déranger"</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Alertes reçues</button>
+        <button class="btn btn-no" onclick="goTo('alert4')">❌ Toujours pas</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="alert4">
+    <button class="back-btn" onclick="goTo('alert3')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🎚️</div>
+      <div class="card-eyebrow">Alertes manquées · Étape 4</div>
+      <div class="card-question">Le téléphone était-il connecté à des écouteurs ou une enceinte Bluetooth ?</div>
+      <div class="card-hint">Si un périphérique audio Bluetooth est connecté, les alertes sonnent uniquement sur ce périphérique, pas sur le haut-parleur du téléphone.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('alert_audio')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Non → SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="alert_audio">
+    <button class="back-btn" onclick="goTo('alert4')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🎧</div>
+      <div class="card-eyebrow" style="color:#b45309;">Cause identifiée</div>
+      <div class="res-title" style="color:#b45309;">Audio redirigé vers écouteurs</div>
+      <div class="info-box"><strong>Solution :</strong> Dans l'app G7 → Alertes → activer "Always Sound" : les alertes urgentes (hypoglycémie sévère) sonneront alors sur le haut-parleur du téléphone même si des écouteurs sont connectés.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Problème résolu</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Toujours en échec → SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="alert_sched">
+    <button class="back-btn" onclick="goTo('alert1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🌙</div>
+      <div class="card-eyebrow" style="color:#b45309;">Plage horaire d'alertes</div>
+      <div class="res-title" style="color:#b45309;">Vérifier l'Alert Schedule</div>
+      <div class="info-box"><strong>Dans l'app G7 :</strong> Alertes → Alert Schedule → vérifier qu'aucune plage horaire ne désactive les alertes la nuit. Désactiver l'Alert Schedule si non souhaité.<br><br>Vérifier aussi : app G7 → Alertes → Quiet Mode → doit être désactivé.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Alertes reçues</button>
+        <button class="btn btn-no" onclick="goTo('alert3')">❌ Toujours pas → vérifier notifications</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       BRANCHE 5 — PRÉCISION / VALEURS ABERRANTES
+  ══════════════════════════════════════════════════ -->
+  <div class="screen" id="prec1">
+    <button class="back-btn" onclick="goTo('s0')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🎯</div>
+      <div class="card-eyebrow">Précision CGM · Étape 1</div>
+      <div class="card-question">Une mesure capillaire a-t-elle été réalisée pour comparer ?</div>
+      <div class="card-hint">La comparaison n'est valide que si la glycémie capillaire a été réalisée au même moment (écart max 5 minutes).</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('prec2')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('prec_nomesure')">❌ Non</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="prec_nomesure">
+    <button class="back-btn" onclick="goTo('prec1')">← Retour</button>
+    <div class="card resolution">
+      <div class="res-icon">💉</div>
+      <div class="card-eyebrow" style="color:#b45309;">Mesure nécessaire</div>
+      <div class="res-title" style="color:#b45309;">Effectuer une glycémie capillaire</div>
+      <div class="info-box"><strong>Procédure :</strong> Réaliser une mesure capillaire au lecteur glycémique. Comparer immédiatement avec la valeur affichée sur l'app G7. Si l'écart est significatif (>20% ou >20 mg/dL), revenir ici.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('prec2')">📊 Mesure effectuée → comparer</button>
+        <button class="btn btn-no" onclick="goTo('s0')">↩ Revenir au menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="prec2">
+    <button class="back-btn" onclick="goTo('prec1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🤸</div>
+      <div class="card-eyebrow">Précision CGM · Étape 2</div>
+      <div class="card-question">Y a-t-il eu une compression du capteur avant la mesure ?</div>
+      <div class="card-hint">Dormire ou s'appuyer sur le capteur peut provoquer des valeurs faussement basses. Cela s'appelle "effet de compression".</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('prec_compres')">✅ Oui / Possible</button>
+        <button class="btn btn-no" onclick="goTo('prec3')">❌ Non</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="prec_compres">
+    <button class="back-btn" onclick="goTo('prec2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🤸</div>
+      <div class="card-eyebrow" style="color:#b45309;">Effet de compression probable</div>
+      <div class="res-title" style="color:#b45309;">Attendre 15-20 minutes</div>
+      <div class="info-box"><strong>Action :</strong> Attendre 15-20 minutes sans compression sur le capteur, puis refaire une mesure capillaire et comparer. La valeur CGM devrait se normaliser.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Valeurs cohérentes</button>
+        <button class="btn btn-no" onclick="goTo('prec3')">❌ Toujours incohérent</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="prec3">
+    <button class="back-btn" onclick="goTo('prec2')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">💊</div>
+      <div class="card-eyebrow">Précision CGM · Étape 3</div>
+      <div class="card-question">Le patient a-t-il pris plus de 1000 mg de paracétamol / acétaminophène dans les dernières heures ?</div>
+      <div class="card-hint">Le paracétamol (Doliprane, Efferalgan…) peut fausser les valeurs CGM à la hausse. Effet dose-dépendant.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('prec_medic')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('prec4')">❌ Non</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="prec_medic">
+    <button class="back-btn" onclick="goTo('prec3')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">💊</div>
+      <div class="card-eyebrow" style="color:#b45309;">Interférence médicamenteuse</div>
+      <div class="res-title" style="color:#b45309;">Paracétamol — valeurs surestimées</div>
+      <div class="info-box"><strong>Information :</strong> Le G7 tolère jusqu'à 1g de paracétamol toutes les 6h. Au-delà, les valeurs CGM peuvent être artificiellement élevées.<br><br>Le patient doit utiliser le <strong>lecteur capillaire</strong> pour ses décisions thérapeutiques jusqu'à élimination du médicament.</div>
+      <div class="warn-box">⚠️ Ne pas modifier l'insulinothérapie sur la seule base de la valeur CGM en cas de prise excessive de paracétamol.</div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <div class="screen" id="prec4">
+    <button class="back-btn" onclick="goTo('prec3')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">📍</div>
+      <div class="card-eyebrow">Précision CGM · Étape 4</div>
+      <div class="card-question">Le capteur est-il placé sur un site approuvé ?</div>
+      <div class="card-hint">G7 : arrière du bras (adulte/enfant) et abdomen (adulte). Les sites non approuvés (cuisse, avant-bras…) peuvent donner des valeurs imprécises.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('rSAV')">✅ Oui → contacter SAV</button>
+        <button class="btn btn-no" onclick="goTo('prec_site')">❌ Non, site hors label</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="prec_site">
+    <button class="back-btn" onclick="goTo('prec4')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">📍</div>
+      <div class="card-eyebrow" style="color:#b45309;">Site hors label</div>
+      <div class="res-title" style="color:#b45309;">Repositionner au prochain changement</div>
+      <div class="info-box"><strong>Sites approuvés G7 :</strong><br>• Adulte : arrière du bras, abdomen<br>• Enfant : arrière du bras uniquement<br><br>Recommander au patient de changer de site au prochain remplacement du capteur.</div>
+      <div class="warn-box">⚠️ Utiliser le lecteur capillaire jusqu'au prochain capteur sur site approuvé.</div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       BRANCHE 6 — CAPTEUR EN ERREUR / PAS DE LECTURE
+  ══════════════════════════════════════════════════ -->
+  <div class="screen" id="sensor1">
+    <button class="back-btn" onclick="goTo('s0')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">📵</div>
+      <div class="card-eyebrow">Capteur en erreur · Étape 1</div>
+      <div class="card-question">Quel message s'affiche sur l'app ?</div>
+      <div class="btn-group">
+        <button class="btn btn-duration" onclick="goTo('sensor2')"><span class="d-icon">⏳</span><span class="d-text"><span class="d-label">"Brief Sensor Issue" — attendre</span><span class="d-sub">Message temporaire, ne pas retirer le capteur</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('sensor_fail')"><span class="d-icon">❌</span><span class="d-text"><span class="d-label">"Sensor Failed" — capteur défaillant</span><span class="d-sub">Remplacement nécessaire</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('sensor_warm')"><span class="d-icon">🌡️</span><span class="d-text"><span class="d-label">Échauffement qui ne se termine pas</span><span class="d-sub">Warm-up > 30 minutes sans lecture</span></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="sensor2">
+    <button class="back-btn" onclick="goTo('sensor1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">⏱️</div>
+      <div class="card-eyebrow">Brief Sensor Issue · Étape 2</div>
+      <div class="card-question">Depuis combien de temps ce message est-il affiché ?</div>
+      <div class="btn-group">
+        <button class="btn btn-duration" onclick="goTo('sensor_wait')"><span class="d-icon">🟢</span><span class="d-text"><span class="d-label">Moins de 3 heures</span><span class="d-sub">Message récent</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('sensor3')"><span class="d-icon">🔴</span><span class="d-text"><span class="d-label">Plus de 3 heures</span><span class="d-sub">Persistance anormale</span></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="sensor_wait">
+    <button class="back-btn" onclick="goTo('sensor2')">← Retour</button>
+    <div class="card resolution res-success">
+      <div class="res-icon">⏳</div>
+      <div class="card-eyebrow" style="color:var(--green);">Normal — attente recommandée</div>
+      <div class="res-title" style="color:var(--green-dark);">Ne pas retirer le capteur</div>
+      <div class="info-box"><strong>Explication :</strong> Le "Brief Sensor Issue" signifie que le capteur et le wearable communiquent bien, mais que le système ne comprend pas encore le signal biologique. C'est temporaire dans la majorité des cas.</div>
+      <div class="warn-box">⚠️ Utiliser le lecteur capillaire pendant cette période. Si le message disparaît sous 3h : normal, pas de remplacement.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Lectures revenues</button>
+        <button class="btn btn-no" onclick="goTo('sensor3')">❌ Toujours affiché après 3h</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="sensor3">
+    <button class="back-btn" onclick="goTo('sensor2')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">💊</div>
+      <div class="card-eyebrow">Brief Sensor Issue · Étape 3</div>
+      <div class="card-question">Le patient a-t-il pris du paracétamol (>1000 mg) ou de l'hydroxyurée ?</div>
+      <div class="card-hint">Ces médicaments peuvent perturber le signal du capteur.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('sensor_medic')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Non → SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="sensor_medic">
+    <button class="back-btn" onclick="goTo('sensor3')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">💊</div>
+      <div class="card-eyebrow" style="color:#b45309;">Interférence médicamenteuse</div>
+      <div class="res-title" style="color:#b45309;">Attendre l'élimination du médicament</div>
+      <div class="info-box"><strong>Action :</strong> Attendre l'élimination du médicament (durée variable selon la dose). Si le capteur ne reprend pas ses lectures dans les 3 heures suivantes, contacter le SAV.</div>
+      <div class="warn-box">⚠️ Utiliser le lecteur capillaire pendant toute cette période.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Lectures revenues</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Toujours en erreur → SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="sensor_fail">
+    <button class="back-btn" onclick="goTo('sensor1')">← Retour</button>
+    <div class="card resolution res-escalate">
+      <div class="res-icon">❌</div>
+      <div class="card-eyebrow" style="color:var(--red);">Capteur défaillant</div>
+      <div class="res-title">Remplacement du capteur</div>
+      <div class="res-body">"Sensor Failed" indique une défaillance définitive du wearable G7. Le capteur doit être remplacé.</div>
+      <div class="info-box"><strong>Procédure :</strong><br>1. Retirer le capteur défaillant (décoller le patch depuis le bord)<br>2. Poser un nouveau capteur sur un site différent<br>3. Démarrer une nouvelle session dans l'app G7</div>
+      <div class="warn-box">⚠️ Utiliser le lecteur capillaire jusqu'à la fin de l'échauffement du nouveau capteur (30 min).</div>
+      <div class="contact-card">
+        <div class="c-label">SAV Dexcom — signalement défaillance</div>
+        <div class="c-row"><span class="c-icon">📧</span><span class="c-val">prestataire.techsupport@dexcom.com</span></div>
+        <div class="c-row"><span class="c-icon">📞</span><span class="c-val">0 800 940 465 — tapez 2</span></div>
+      </div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <div class="screen" id="sensor_warm">
+    <button class="back-btn" onclick="goTo('sensor1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🌡️</div>
+      <div class="card-eyebrow" style="color:#b45309;">Échauffement prolongé</div>
+      <div class="res-title" style="color:#b45309;">Vérifications à effectuer</div>
+      <div class="info-box"><strong>Durée normale :</strong> 30 minutes pour le G7.<br><br><strong>Si > 30 min sans lecture :</strong><br>1. Vérifier que le code de jumelage est bien saisi<br>2. Vérifier que le wearable est correctement posé (pas de bulle d'air sous le patch)<br>3. Si indicateur bloqué → arrêter la session et remplacer le capteur</div>
+      <div class="warn-box">⚠️ Utiliser le lecteur capillaire pendant toute la durée d'échauffement.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Lectures démarrées</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Toujours bloqué → SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       BRANCHE 7 — ADHÉRENCE / RÉACTION CUTANÉE
+  ══════════════════════════════════════════════════ -->
+  <div class="screen" id="adh1">
+    <button class="back-btn" onclick="goTo('s0')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🩹</div>
+      <div class="card-eyebrow">Adhérence / Peau · Étape 1</div>
+      <div class="card-question">Quel est le problème observé ?</div>
+      <div class="btn-group">
+        <button class="btn btn-duration" onclick="goTo('adh2')"><span class="d-icon">🔓</span><span class="d-text"><span class="d-label">Le patch se décolle / est décollé</span><span class="d-sub">Adhérence insuffisante avant fin de session</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('adh_skin1')"><span class="d-icon">🔴</span><span class="d-text"><span class="d-label">Réaction cutanée sous le patch</span><span class="d-sub">Rougeur, démangeaison, irritation, cloques…</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('adh_noadhesif')"><span class="d-icon">🔲</span><span class="d-text"><span class="d-label">Patch sans adhésif / ne colle pas</span><span class="d-sub">Le liner a peut-être été oublié ou l'adhésif est absent</span></span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 046 — Patch sans adhésif -->
+  <div class="screen" id="adh_noadhesif">
+    <button class="back-btn" onclick="goTo('adh1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🔲</div>
+      <div class="card-eyebrow">Patch sans adhésif · Étape 1</div>
+      <div class="card-question">Le capteur a-t-il tout de même adhéré à la peau après l'insertion ?</div>
+      <div class="card-hint">Si le patch n'a jamais collé dès le départ, il s'agit d'un problème de liner ou d'un défaut produit.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('adh_noadhesif2')">✅ Oui, il a collé au début</button>
+        <button class="btn btn-no" onclick="goTo('adh_noadhesif_defaut')">❌ Non, jamais collé</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="adh_noadhesif2">
+    <button class="back-btn" onclick="goTo('adh_noadhesif')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🧴</div>
+      <div class="card-eyebrow">Patch sans adhésif · Étape 2</div>
+      <div class="card-question">La peau était-elle propre, sèche et sans crème avant la pose ?</div>
+      <div class="card-hint">Lotion, huile, transpiration ou résidu d'un ancien patch peuvent empêcher l'adhésion.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('adh_noadhesif_defaut')">✅ Oui, bien préparée</button>
+        <button class="btn btn-no" onclick="goTo('adh_prep')">❌ Non → conseils préparation</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="adh_noadhesif_defaut">
+    <button class="back-btn" onclick="goTo('adh_noadhesif')">← Retour</button>
+    <div class="card resolution res-escalate">
+      <div class="res-icon">🔲</div>
+      <div class="card-eyebrow" style="color:var(--red);">Défaut produit probable</div>
+      <div class="res-title">Signaler au SAV Dexcom</div>
+      <div class="res-body">Un patch G7 sans adhésif ou dont l'adhésif ne fonctionne pas dès la pose constitue un défaut produit à signaler obligatoirement.</div>
+      <div class="info-box"><strong>Avant de retirer le capteur :</strong><br>Demander au patient de photographier le patch (face adhésive visible) dans une bonne lumière. Joindre la photo au signalement SAV.</div>
+      <div class="contact-card">
+        <div class="c-label">Signalement défaut — SAV Dexcom</div>
+        <div class="c-row"><span class="c-icon">📧</span><span class="c-val">prestataire.techsupport@dexcom.com<small>Joindre photo du patch + numéro de lot</small></span></div>
+        <div class="c-row"><span class="c-icon">📞</span><span class="c-val">0 800 940 465 — tapez 2</span></div>
+      </div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <!-- Adhérence -->
+  <div class="screen" id="adh2">
+    <button class="back-btn" onclick="goTo('adh1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🧴</div>
+      <div class="card-eyebrow">Adhérence · Étape 2</div>
+      <div class="card-question">La peau était-elle nettoyée et sèche avant la pose ?</div>
+      <div class="card-hint">La présence de crème, lotion, huile ou transpiration sous le patch réduit fortement l'adhérence.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('adh3')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('adh_prep')">❌ Non / Incertain</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="adh_prep">
+    <button class="back-btn" onclick="goTo('adh2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🧴</div>
+      <div class="card-eyebrow" style="color:#b45309;">Préparation insuffisante</div>
+      <div class="res-title" style="color:#b45309;">Protocole de pose à respecter</div>
+      <div class="info-box"><strong>Pour la prochaine pose :</strong><br>1. Nettoyer le site avec eau + savon, laisser sécher<br>2. Frotter avec une lingette alcoolisée, laisser sécher complètement (1-2 min)<br>3. Ne pas toucher la zone nettoyée avant la pose<br>4. Appliquer l'overpatch immédiatement après l'insertion<br>5. Frotter fermement le patch pendant 30 secondes</div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <div class="screen" id="adh3">
+    <button class="back-btn" onclick="goTo('adh2')">← Retour</button>
+    <div class="card resolution">
+      <div class="res-icon">🩹</div>
+      <div class="card-eyebrow" style="color:var(--green);">Conseils adhérence</div>
+      <div class="res-title" style="color:var(--green-dark);">Renforcer la tenue du patch</div>
+      <div class="info-box"><strong>Actions immédiates :</strong><br>• Appliquer l'overpatch Dexcom fourni dans la boîte<br>• Ou utiliser du sparadrap médical (Tegaderm, Hypafix…)<br><br><strong>Pour les prochaines poses :</strong><br>• Éviter les zones de plis cutanés et la ceinture<br>• Changer de site à chaque nouveau capteur<br>• En cas de forte transpiration : appliquer un film protecteur (SkinTac) sous le patch</div>
+      <div class="contact-card">
+        <div class="c-label">Si le capteur s'est complètement décollé</div>
+        <div class="c-row"><span class="c-icon">📧</span><span class="c-val">prestataire.techsupport@dexcom.com<small>Pour signalement et remplacement éventuel</small></span></div>
+      </div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <!-- Réaction cutanée -->
+  <div class="screen" id="adh_skin1">
+    <button class="back-btn" onclick="goTo('adh1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🔴</div>
+      <div class="card-eyebrow">Réaction cutanée · Étape 1</div>
+      <div class="card-question">Quelle est la nature de la réaction ?</div>
+      <div class="btn-group">
+        <button class="btn btn-duration" onclick="goTo('adh_skin2')"><span class="d-icon">🔴</span><span class="d-text"><span class="d-label">Rougeur, démangeaison, éruption</span><span class="d-sub">Réaction allergique ou irritative probable</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('adh_skin_bleed')"><span class="d-icon">🩸</span><span class="d-text"><span class="d-label">Saignement ou hématome</span><span class="d-sub">À l'insertion ou sous le patch</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('adh_skin_pain')"><span class="d-icon">😣</span><span class="d-text"><span class="d-label">Douleur pendant le port</span><span class="d-sub">Inconfort persistant sur le site</span></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="adh_skin2">
+    <button class="back-btn" onclick="goTo('adh_skin1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🧪</div>
+      <div class="card-eyebrow">Réaction cutanée · Étape 2</div>
+      <div class="card-question">La réaction se situe-t-elle uniquement sous le patch ou s'étend-elle au-delà ?</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('adh_skin3')">🔲 Sous le patch uniquement</button>
+        <button class="btn btn-no" onclick="goTo('adh_skin_extend')">🔳 Au-delà du patch</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="adh_skin3">
+    <button class="back-btn" onclick="goTo('adh_skin2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🔴</div>
+      <div class="card-eyebrow" style="color:#b45309;">Réaction locale</div>
+      <div class="res-title" style="color:#b45309;">Conseils et signalement</div>
+      <div class="info-box"><strong>Conseils immédiats :</strong><br>• Si réaction légère : attendre la fin de session, garder la zone propre<br>• Éviter les zones à peau fine ou sensible pour les prochains capteurs<br>• Ne pas utiliser de crème sous le capteur sans avis médical<br>• Rotation des sites à chaque changement</div>
+      <div class="warn-box">⚠️ Si la réaction s'aggrave (pustules, infection, fièvre) : consulter un médecin et retirer le capteur.</div>
+      <div class="contact-card">
+        <div class="c-label">Signaler la réaction au SAV Dexcom</div>
+        <div class="c-row"><span class="c-icon">📧</span><span class="c-val">prestataire.techsupport@dexcom.com</span></div>
+        <div class="c-row"><span class="c-icon">📞</span><span class="c-val">0 800 940 465 — tapez 2</span></div>
+      </div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <div class="screen" id="adh_skin_extend">
+    <button class="back-btn" onclick="goTo('adh_skin2')">← Retour</button>
+    <div class="card resolution res-escalate">
+      <div class="res-icon">⚠️</div>
+      <div class="card-eyebrow" style="color:var(--red);">Réaction étendue</div>
+      <div class="res-title">Retrait du capteur recommandé</div>
+      <div class="res-body">Une réaction s'étendant au-delà du patch peut indiquer une allergie au matériau adhésif. Le médecin traitant doit être consulté.</div>
+      <div class="warn-box">⚠️ Retirer le capteur si la réaction est douloureuse, s'aggrave ou s'accompagne de fièvre.</div>
+      <div class="contact-card">
+        <div class="c-label">Signalement obligatoire — SAV Dexcom</div>
+        <div class="c-row"><span class="c-icon">📧</span><span class="c-val">prestataire.techsupport@dexcom.com</span></div>
+        <div class="c-row"><span class="c-icon">📞</span><span class="c-val">0 800 940 465 — tapez 2</span></div>
+      </div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <div class="screen" id="adh_skin_bleed">
+    <button class="back-btn" onclick="goTo('adh_skin1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🩸</div>
+      <div class="card-eyebrow" style="color:#b45309;">Saignement / Hématome</div>
+      <div class="res-title" style="color:#b45309;">Conseils selon la situation</div>
+      <div class="info-box"><strong>Saignement à l'insertion :</strong> Normal si mineur et ne traversant pas le patch. Appliquer une légère pression autour (pas sur) le capteur.<br><br><strong>Si saignement important ou visible sous le patch :</strong> Retirer le capteur, exercer une pression, poser un nouveau capteur sur un site différent.<br><br><strong>Hématome sous le patch :</strong> Si le capteur fonctionne, pas de remplacement immédiat nécessaire. Changer de site au prochain capteur.</div>
+      <div class="warn-box">⚠️ Signaler au SAV si saignement important ou récurrent.</div>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Nouveau problème</button>
+    </div>
+  </div>
+
+  <div class="screen" id="adh_skin_pain">
+    <button class="back-btn" onclick="goTo('adh_skin1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">😣</div>
+      <div class="card-eyebrow" style="color:#b45309;">Douleur pendant le port</div>
+      <div class="res-title" style="color:#b45309;">Évaluer et adapter</div>
+      <div class="info-box"><strong>Conseils :</strong><br>• La douleur disparaît souvent dans les premières heures après la pose<br>• Éviter les zones fréquemment comprimées (ceinture, bretelle, bord lit)<br>• Si la douleur persiste > 24h ou s'aggrave : retirer le capteur et changer de site<br>• Éviter les zones avec cicatrices, tatouages ou irritation préexistante</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Douleur disparue</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Persistante → signaler au SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       BRANCHE 8 — APPLICATION FOLLOW
+  ══════════════════════════════════════════════════ -->
+  <div class="screen" id="follow1">
+    <button class="back-btn" onclick="goTo('s0')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">👨‍👩‍👧</div>
+      <div class="card-eyebrow">Application Follow · Étape 1</div>
+      <div class="card-question">Le proche (follower) a-t-il accepté l'invitation par email ?</div>
+      <div class="card-hint">L'invitation est envoyée depuis l'app Dexcom G7 du patient. Le proche doit l'accepter via un email reçu.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('follow2')">✅ Oui, invitation acceptée</button>
+        <button class="btn btn-no" onclick="goTo('follow_inv')">❌ Non / Pas reçu</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="follow_inv">
+    <button class="back-btn" onclick="goTo('follow1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">📧</div>
+      <div class="card-eyebrow" style="color:#b45309;">Invitation non reçue</div>
+      <div class="res-title" style="color:#b45309;">Renvoyer l'invitation</div>
+      <div class="info-box"><strong>Procédure :</strong><br>1. App G7 du patient → Contacts → Supprimer le follower existant<br>2. Réinviter avec la bonne adresse email<br>3. Le proche vérifie ses spams<br>4. Le proche installe l'app Dexcom Follow depuis l'App Store / Google Play<br>5. Accepter l'invitation depuis l'email</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Follow fonctionne</button>
+        <button class="btn btn-no" onclick="goTo('follow2')">❌ Invitation acceptée mais pas de données</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="follow2">
+    <button class="back-btn" onclick="goTo('follow1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">📡</div>
+      <div class="card-eyebrow">Application Follow · Étape 2</div>
+      <div class="card-question">Le téléphone du patient (partageur) envoie-t-il ses données au cloud ?</div>
+      <div class="card-hint">App G7 du patient → Paramètres → Dexcom Share → vérifier que le partage est activé et que l'internet est disponible.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('follow3')">✅ Oui, partage actif</button>
+        <button class="btn btn-no" onclick="goTo('follow_share')">❌ Non / Désactivé</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="follow_share">
+    <button class="back-btn" onclick="goTo('follow2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">📡</div>
+      <div class="card-eyebrow" style="color:#b45309;">Partage désactivé</div>
+      <div class="res-title" style="color:#b45309;">Activer le partage Dexcom Share</div>
+      <div class="info-box"><strong>App G7 du patient :</strong><br>Paramètres → Dexcom Share → activer "Partage de données" → vérifier connexion internet (Wi-Fi ou 4G) → attendre 5 minutes.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Données reçues par le follower</button>
+        <button class="btn btn-no" onclick="goTo('follow3')">❌ Toujours pas de données</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="follow3">
+    <button class="back-btn" onclick="goTo('follow2')">← Retour</button>
+    <div class="card resolution">
+      <div class="res-icon">🔍</div>
+      <div class="card-eyebrow" style="color:#b45309;">Vérifications côté follower</div>
+      <div class="res-title" style="color:#b45309;">Points à contrôler sur l'app Follow</div>
+      <div class="info-box"><strong>Sur le téléphone du proche :</strong><br>1. App Dexcom Follow bien installée et à jour<br>2. Connecté avec le bon compte email<br>3. Internet disponible (Wi-Fi ou 4G)<br>4. Notifications activées pour l'app Follow<br>5. Vérifier <strong>status.dexcom.com</strong> — aucune panne en cours</div>
+      <div class="contact-card">
+        <div class="c-label">Si le problème persiste — SAV Dexcom</div>
+        <div class="c-row"><span class="c-icon">📧</span><span class="c-val">prestataire.techsupport@dexcom.com</span></div>
+        <div class="c-row"><span class="c-icon">📞</span><span class="c-val">0 800 940 465 — tapez 2</span></div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Follow fonctionne</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Toujours en échec → SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3500 — Cloud Share indisponible -->
+  <div class="screen" id="cloud1">
+    <button class="back-btn" onclick="goTo('s0')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">☁️</div>
+      <div class="card-eyebrow">Cloud Share · Étape 1</div>
+      <div class="card-question">L'icône cloud dans l'app G7 affiche-t-elle une erreur ?</div>
+      <div class="card-hint">Dans l'app G7 → Paramètres → Dexcom Share : le statut du cloud est visible. Une croix rouge ou "Not Working" indique une coupure.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('cloud2')">✅ Oui, erreur cloud</button>
+        <button class="btn btn-no" onclick="goTo('cloud_check')">❌ Pas d'erreur visible</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="cloud2">
+    <button class="back-btn" onclick="goTo('cloud1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">📶</div>
+      <div class="card-eyebrow">Cloud Share · Étape 2</div>
+      <div class="card-question">Le téléphone est-il connecté à internet (Wi-Fi ou données mobiles) ?</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('cloud3')">✅ Oui, connecté</button>
+        <button class="btn btn-no" onclick="goTo('cloud_nointernet')">❌ Non</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="cloud_nointernet">
+    <button class="back-btn" onclick="goTo('cloud2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">📶</div>
+      <div class="card-eyebrow" style="color:#b45309;">Pas de connexion internet</div>
+      <div class="res-title" style="color:#b45309;">Connecter le téléphone à internet</div>
+      <div class="info-box"><strong>Action :</strong> Activer le Wi-Fi ou les données mobiles. Une fois connecté, le cloud se resynchronise automatiquement en quelques minutes.<br><br>Note : les lectures CGM continuent d'être enregistrées localement même sans internet. Elles seront synchronisées dès la reconnexion.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Cloud resynchronisé</button>
+        <button class="btn btn-no" onclick="goTo('cloud3')">❌ Toujours en erreur</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="cloud3">
+    <button class="back-btn" onclick="goTo('cloud2')">← Retour</button>
+    <div class="card resolution">
+      <div class="res-icon">☁️</div>
+      <div class="card-eyebrow" style="color:#b45309;">Internet OK — erreur cloud persistante</div>
+      <div class="res-title" style="color:#b45309;">Vérifier le statut des serveurs Dexcom</div>
+      <div class="info-box"><strong>Action :</strong><br>1. Vérifier <strong>status.dexcom.com</strong> — panne serveur en cours ?<br>2. Si panne confirmée : attendre la résolution (Dexcom publie les mises à jour sur cette page)<br>3. Si pas de panne : mode avion du téléphone activé ? Désactiver et réessayer.<br>4. Fermer et rouvrir l'app G7</div>
+      <div class="warn-box">⚠️ Les données CGM sont sauvegardées localement et se synchroniseront automatiquement dès la résolution. Le capteur continue de fonctionner normalement.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Cloud resynchronisé</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Panne persistante → SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="cloud_check">
+    <button class="back-btn" onclick="goTo('cloud1')">← Retour</button>
+    <div class="card resolution res-success">
+      <div class="res-icon">☁️</div>
+      <div class="card-eyebrow" style="color:var(--green);">Cloud opérationnel</div>
+      <div class="res-title" style="color:var(--green-dark);">Pas d'erreur cloud détectée</div>
+      <div class="res-body">Le cloud Dexcom Share semble fonctionner normalement. Si le problème concerne l'app Follow qui ne reçoit pas les données, utiliser la branche dédiée.</div>
+      <button class="btn btn-primary" onclick="goTo('follow1')">→ Aller à la branche Follow</button>
+      <button class="restart-btn" onclick="goTo('s0')">↩ Retour au menu</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       BRANCHE 9 — CLARITY
+  ══════════════════════════════════════════════════ -->
+  <div class="screen" id="clarity1">
+    <button class="back-btn" onclick="goTo('s0')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">📊</div>
+      <div class="card-eyebrow">Clarity · Étape 1</div>
+      <div class="card-question">Quel est le problème avec Clarity ?</div>
+      <div class="btn-group">
+        <button class="btn btn-duration" onclick="goTo('clarity_login')"><span class="d-icon">🔐</span><span class="d-text"><span class="d-label">Impossible de se connecter</span><span class="d-sub">Identifiants refusés, compte bloqué</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('clarity_upload')"><span class="d-icon">⬆️</span><span class="d-text"><span class="d-label">Données manquantes ou non uploadées</span><span class="d-sub">Rapport vide, données absentes</span></span></button>
+        <button class="btn btn-duration" onclick="goTo('clarity2')"><span class="d-icon">📄</span><span class="d-text"><span class="d-label">Rapport incorrect / erreur d'affichage</span><span class="d-sub">Données semblant fausses ou incomplètes</span></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="clarity_login">
+    <button class="back-btn" onclick="goTo('clarity1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🔐</div>
+      <div class="card-eyebrow" style="color:#b45309;">Problème de connexion</div>
+      <div class="res-title" style="color:#b45309;">Vérifications compte Clarity</div>
+      <div class="info-box"><strong>Points à vérifier :</strong><br>1. URL correcte : <strong>clarity.dexcom.eu</strong> (Europe)<br>2. Email identique à celui de l'app Dexcom G7<br>3. Mot de passe oublié → "Mot de passe oublié" sur la page de connexion<br>4. Compte bloqué après 5 essais → attendre 30 min ou contacter le SAV</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Connexion réussie</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Compte inaccessible → SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="clarity_upload">
+    <button class="back-btn" onclick="goTo('clarity1')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">⬆️</div>
+      <div class="card-eyebrow" style="color:#b45309;">Données manquantes</div>
+      <div class="res-title" style="color:#b45309;">Vérifier la synchronisation</div>
+      <div class="info-box"><strong>Pour l'app mobile :</strong><br>• L'app G7 synchronise automatiquement si internet disponible<br>• Délai possible jusqu'à 4 heures après la dernière lecture<br>• Vérifier que le partage cloud est activé dans l'app G7<br><br><strong>Pour le récepteur (upload PC) :</strong><br>• Utiliser le câble Dexcom officiel<br>• Ouvrir Clarity Uploader avant de brancher le récepteur<br>• Vérifier que le récepteur est allumé et chargé</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Données apparues</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Toujours vide → SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="clarity2">
+    <button class="back-btn" onclick="goTo('clarity1')">← Retour</button>
+    <div class="card">
+      <div class="card-icon">🕐</div>
+      <div class="card-eyebrow">Clarity · Étape 2</div>
+      <div class="card-question">La date/heure du récepteur ou du téléphone a-t-elle été modifiée récemment ?</div>
+      <div class="card-hint">Une modification manuelle de l'heure peut décaler les données dans Clarity.</div>
+      <div class="btn-group row">
+        <button class="btn btn-yes" onclick="goTo('clarity3')">✅ Oui</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Non → SAV</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="clarity3">
+    <button class="back-btn" onclick="goTo('clarity2')">← Retour</button>
+    <div class="card resolution res-warning">
+      <div class="res-icon">🕐</div>
+      <div class="card-eyebrow" style="color:#b45309;">Décalage horaire probable</div>
+      <div class="res-title" style="color:#b45309;">Recalibrer la date/heure</div>
+      <div class="info-box"><strong>Action :</strong><br>Réglages → Date et heure → activer "Réglage automatique".<br><br>Les données dans Clarity peuvent mettre jusqu'à 24h à s'afficher correctement après une correction d'heure.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" onclick="goTo('rOK')">✅ Rapport correct</button>
+        <button class="btn btn-no" onclick="goTo('rSAV')">❌ Toujours incorrect → SAV</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /card-wrap -->
+
+<script>
+  const progressMap = {
+    s0: null,
+    s1: { step: 1, total: 5, label: 'Perte de signal' },
+    s2: { step: 2, total: 5, label: 'Perte de signal' },
+    s3: { step: 3, total: 5, label: 'Perte de signal' },
+    s4: { step: 4, total: 5, label: 'Perte de signal' },
+    s5: { step: 5, total: 5, label: 'Perte de signal' },
+    rDistance: { step: 2, total: 5, label: 'Résolution — Distance' },
+    rBluetooth: { step: 3, total: 5, label: 'Résolution — Bluetooth' },
+    rMoins15: { step: 4, total: 5, label: 'Résolution — Attente' },
+    rPairing: { step: 1, total: 5, label: 'Redirection' },
+    rSAV: { step: 5, total: 5, label: 'Escalade SAV' },
+    rOK: { step: 5, total: 5, label: '✅ Résolu' },
+    // Jumelage
+    pair1:{step:1,total:4,label:'Jumelage Bluetooth'},
+    pair2:{step:2,total:4,label:'Jumelage Bluetooth'},
+    pair3:{step:3,total:4,label:'Jumelage Bluetooth'},
+    pair4:{step:4,total:4,label:'Jumelage Bluetooth'},
+    pair_code:{step:2,total:4,label:'Code de jumelage'},
+    pair_multi:{step:3,total:4,label:'Appareils multiples'},
+    pair_new:{step:2,total:4,label:'Nouveau capteur'},
+    // Alertes
+    alert1:{step:1,total:4,label:'Alertes manquées'},
+    alert2:{step:2,total:4,label:'Alertes manquées'},
+    alert3:{step:3,total:4,label:'Alertes manquées'},
+    alert4:{step:4,total:4,label:'Alertes manquées'},
+    alert_vol:{step:2,total:4,label:'Volume / Silencieux'},
+    alert_notif:{step:3,total:4,label:'Notifications'},
+    alert_audio:{step:4,total:4,label:'Audio Bluetooth'},
+    alert_sched:{step:2,total:4,label:'Plage horaire alertes'},
+    // Précision
+    prec1:{step:1,total:4,label:'Précision CGM'},
+    prec2:{step:2,total:4,label:'Précision CGM'},
+    prec3:{step:3,total:4,label:'Précision CGM'},
+    prec4:{step:4,total:4,label:'Précision CGM'},
+    prec_nomesure:{step:1,total:4,label:'Mesure capillaire'},
+    prec_compres:{step:3,total:4,label:'Compression capteur'},
+    prec_medic:{step:3,total:4,label:'Médicaments interférents'},
+    prec_site:{step:4,total:4,label:'Site hors label'},
+    // Capteur
+    sensor1:{step:1,total:3,label:'Capteur en erreur'},
+    sensor2:{step:2,total:3,label:'Capteur en erreur'},
+    sensor3:{step:3,total:3,label:'Capteur en erreur'},
+    sensor_wait:{step:2,total:3,label:'Brief Sensor Issue'},
+    sensor_fail:{step:1,total:1,label:'Sensor Failed'},
+    sensor_warm:{step:1,total:1,label:'Échauffement'},
+    sensor_medic:{step:3,total:3,label:'Médicaments'},
+    // Adhérence
+    adh1:{step:1,total:3,label:'Adhérence / Peau'},
+    adh2:{step:2,total:3,label:'Adhérence'},
+    adh3:{step:3,total:3,label:'Adhérence'},
+    adh_prep:{step:2,total:3,label:'Préparation peau'},
+    adh_skin1:{step:1,total:3,label:'Réaction cutanée'},
+    adh_skin2:{step:2,total:3,label:'Réaction cutanée'},
+    adh_skin3:{step:3,total:3,label:'Réaction cutanée'},
+    adh_skin_extend:{step:3,total:3,label:'Réaction étendue'},
+    adh_skin_bleed:{step:1,total:1,label:'Saignement'},
+    adh_skin_pain:{step:1,total:1,label:'Douleur'},
+    // Follow
+    follow1:{step:1,total:3,label:'Application Follow'},
+    follow2:{step:2,total:3,label:'Application Follow'},
+    follow3:{step:3,total:3,label:'Application Follow'},
+    follow_inv:{step:1,total:3,label:'Invitation Follow'},
+    follow_share:{step:2,total:3,label:'Partage désactivé'},
+    // Clarity
+    clarity1:{step:1,total:3,label:'Clarity'},
+    clarity2:{step:2,total:3,label:'Clarity'},
+    clarity3:{step:3,total:3,label:'Clarity'},
+    clarity_login:{step:1,total:3,label:'Connexion Clarity'},
+    clarity_upload:{step:1,total:3,label:'Upload Clarity'},
+    // 046 Patch sans adhésif
+    adh_noadhesif:{step:1,total:2,label:'Patch sans adhésif'},
+    adh_noadhesif2:{step:2,total:2,label:'Patch sans adhésif'},
+    adh_noadhesif_defaut:{step:2,total:2,label:'Défaut produit'},
+    // 235 Country of residence
+    app_country1:{step:1,total:3,label:'Country of residence'},
+    app_country_vpn:{step:2,total:3,label:'Country of residence'},
+    app_country2:{step:2,total:3,label:'Country of residence'},
+    app_country_travel:{step:3,total:3,label:'Voyage temporaire'},
+    app_country_perm:{step:3,total:3,label:'Changement de pays'},
+    // 5200 Montre connectée
+    watch1:{step:1,total:4,label:'Montre connectée'},
+    watch2:{step:2,total:4,label:'Montre connectée'},
+    watch3:{step:3,total:4,label:'Montre connectée'},
+    watch4:{step:4,total:4,label:'Montre connectée'},
+    watch_install:{step:2,total:4,label:'App montre'},
+    watch_range:{step:2,total:4,label:'Distance montre'},
+    // 3500 Cloud Share
+    cloud1:{step:1,total:3,label:'Cloud Share'},
+    cloud2:{step:2,total:3,label:'Cloud Share'},
+    cloud3:{step:3,total:3,label:'Cloud Share'},
+    cloud_nointernet:{step:2,total:3,label:'Cloud — pas internet'},
+    cloud_check:{step:1,total:1,label:'Cloud opérationnel'},
+    // Application / Téléphone
+    app1:{step:1,total:3,label:'Application / Téléphone'},
+    app_crash1:{step:1,total:3,label:'App crash'},
+    app_crash2:{step:2,total:3,label:'App crash'},
+    app_crash3:{step:3,total:3,label:'App crash'},
+    app_crash_install:{step:2,total:3,label:'Nouvelle installation'},
+    app_incompat:{step:3,total:3,label:'Incompatibilité'},
+    app_bt1:{step:1,total:3,label:'Bluetooth désactivé'},
+    app_bt2:{step:2,total:3,label:'Bluetooth désactivé'},
+    app_bt3:{step:3,total:3,label:'Bluetooth désactivé'},
+    app_bt_off:{step:2,total:3,label:'Bluetooth désactivé'},
+    app_bt_avion:{step:2,total:3,label:'Mode avion'},
+    app_bt_perm:{step:3,total:3,label:'Permissions Bluetooth'},
+    app_storage1:{step:1,total:1,label:'Stockage plein'},
+    app_os1:{step:1,total:2,label:'OS incompatible'},
+    app_os_update:{step:2,total:2,label:'OS incompatible'},
+    app_os2:{step:2,total:2,label:'OS incompatible'},
+    app_clock1:{step:1,total:2,label:'Adjusting clock'},
+    app_clock_manual:{step:2,total:2,label:'Adjusting clock'},
+    app_clock2:{step:2,total:2,label:'Adjusting clock'},
+    app_clock_wait:{step:2,total:2,label:'Adjusting clock'},
+    app_clock_nointernet:{step:2,total:2,label:'Adjusting clock'},
+    app1: { step: 1, total: 3, label: 'Application / Téléphone' },
+    app_crash1: { step: 1, total: 3, label: 'App crash' },
+    app_crash2: { step: 2, total: 3, label: 'App crash' },
+    app_crash3: { step: 3, total: 3, label: 'App crash' },
+    app_crash_install: { step: 2, total: 3, label: 'Nouvelle installation' },
+    app_incompat: { step: 3, total: 3, label: 'Incompatibilité' },
+    app_bt1: { step: 1, total: 3, label: 'Bluetooth désactivé' },
+    app_bt2: { step: 2, total: 3, label: 'Bluetooth désactivé' },
+    app_bt3: { step: 3, total: 3, label: 'Bluetooth désactivé' },
+    app_bt_off: { step: 2, total: 3, label: 'Bluetooth désactivé' },
+    app_bt_avion: { step: 2, total: 3, label: 'Mode avion' },
+    app_bt_perm: { step: 3, total: 3, label: 'Permissions Bluetooth' },
+    app_storage1: { step: 1, total: 1, label: 'Stockage plein' },
+    app_os1: { step: 1, total: 2, label: 'OS incompatible' },
+    app_os_update: { step: 2, total: 2, label: 'OS incompatible' },
+    app_os2: { step: 2, total: 2, label: 'OS incompatible' },
+    app_clock1: { step: 1, total: 2, label: 'Adjusting clock' },
+    app_clock_manual: { step: 2, total: 2, label: 'Adjusting clock' },
+    app_clock2: { step: 2, total: 2, label: 'Adjusting clock' },
+    app_clock_wait: { step: 2, total: 2, label: 'Adjusting clock' },
+    app_clock_nointernet: { step: 2, total: 2, label: 'Adjusting clock' },
+    // Jumelage
+    pair1:{step:1,total:4,label:'Jumelage Bluetooth'},
+    pair2:{step:2,total:4,label:'Jumelage Bluetooth'},
+    pair3:{step:3,total:4,label:'Jumelage Bluetooth'},
+    pair4:{step:4,total:4,label:'Jumelage Bluetooth'},
+    pair_code:{step:2,total:4,label:'Code de jumelage'},
+    pair_multi:{step:3,total:4,label:'Appareils multiples'},
+    pair_new:{step:2,total:4,label:'Nouveau capteur'},
+    // Alertes
+    alert1:{step:1,total:4,label:'Alertes manquées'},
+    alert2:{step:2,total:4,label:'Alertes manquées'},
+    alert3:{step:3,total:4,label:'Alertes manquées'},
+    alert4:{step:4,total:4,label:'Alertes manquées'},
+    alert_vol:{step:2,total:4,label:'Volume / Silencieux'},
+    alert_notif:{step:3,total:4,label:'Notifications'},
+    alert_audio:{step:4,total:4,label:'Audio Bluetooth'},
+    alert_sched:{step:2,total:4,label:'Plage horaire alertes'},
+    // Précision
+    prec1:{step:1,total:4,label:'Précision CGM'},
+    prec2:{step:2,total:4,label:'Précision CGM'},
+    prec3:{step:3,total:4,label:'Précision CGM'},
+    prec4:{step:4,total:4,label:'Précision CGM'},
+    prec_nomesure:{step:1,total:4,label:'Mesure capillaire'},
+    prec_compres:{step:3,total:4,label:'Compression capteur'},
+    prec_medic:{step:3,total:4,label:'Médicaments interférents'},
+    prec_site:{step:4,total:4,label:'Site hors label'},
+    // Capteur
+    sensor1:{step:1,total:3,label:'Capteur en erreur'},
+    sensor2:{step:2,total:3,label:'Capteur en erreur'},
+    sensor3:{step:3,total:3,label:'Capteur en erreur'},
+    sensor_wait:{step:2,total:3,label:'Brief Sensor Issue'},
+    sensor_fail:{step:1,total:1,label:'Sensor Failed'},
+    sensor_warm:{step:1,total:1,label:'Échauffement'},
+    sensor_medic:{step:3,total:3,label:'Médicaments'},
+    // Adhérence
+    adh1:{step:1,total:3,label:'Adhérence / Peau'},
+    adh2:{step:2,total:3,label:'Adhérence'},
+    adh3:{step:3,total:3,label:'Adhérence'},
+    adh_prep:{step:2,total:3,label:'Préparation peau'},
+    adh_skin1:{step:1,total:3,label:'Réaction cutanée'},
+    adh_skin2:{step:2,total:3,label:'Réaction cutanée'},
+    adh_skin3:{step:3,total:3,label:'Réaction cutanée'},
+    adh_skin_extend:{step:3,total:3,label:'Réaction étendue'},
+    adh_skin_bleed:{step:1,total:1,label:'Saignement'},
+    adh_skin_pain:{step:1,total:1,label:'Douleur'},
+    // Follow
+    follow1:{step:1,total:3,label:'Application Follow'},
+    follow2:{step:2,total:3,label:'Application Follow'},
+    follow3:{step:3,total:3,label:'Application Follow'},
+    follow_inv:{step:1,total:3,label:'Invitation Follow'},
+    follow_share:{step:2,total:3,label:'Partage désactivé'},
+    // Clarity
+    clarity1:{step:1,total:3,label:'Clarity'},
+    clarity2:{step:2,total:3,label:'Clarity'},
+    clarity3:{step:3,total:3,label:'Clarity'},
+    clarity_login:{step:1,total:3,label:'Connexion Clarity'},
+    clarity_upload:{step:1,total:3,label:'Upload Clarity'},
+  };
+
+  function goTo(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    const prog = progressMap[id];
+    const wrap = document.getElementById('progressWrap');
+    if (prog) {
+      wrap.style.display = 'block';
+      document.getElementById('progressCategory').textContent = prog.label;
+      document.getElementById('progressStepLabel').textContent = `Étape ${prog.step}/${prog.total}`;
+      document.getElementById('progressFill').style.width = `${(prog.step / prog.total) * 100}%`;
+    } else {
+      wrap.style.display = 'none';
+    }
+  }
+
+  function toggleCheck(el) {
+    el.classList.toggle('checked');
+  }</script>
+</body>
+</html>
